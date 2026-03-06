@@ -6,27 +6,19 @@ import {
   isSupportedLocale as isLocaleSupported,
 } from "./locale-types";
 
-// Re-export types and utilities for convenience
 export type { Locale, Translations };
 export const getSupportedLocales = getLocales;
 export const isSupportedLocale = isLocaleSupported;
 
-// Initialize Lokalise API client
 const lokaliseApi = new LokaliseApi({
   apiKey: process.env.LOKALISE_API_TOKEN!,
 });
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_LOKALISE_PROJECT_ID!;
 
-/**
- * Fetch translations for a specific locale from Lokalise
- * Uses the keys API to get all translations for a language
- */
 export async function loadTranslations(locale: Locale): Promise<Translations> {
   try {
     const translations: Translations = {};
-
-    // Fetch all keys with translations for the specified locale
     let page = 1;
     let hasMore = true;
 
@@ -36,10 +28,8 @@ export async function loadTranslations(locale: Locale): Promise<Translations> {
         page,
         limit: 500,
         include_translations: 1,
-        filter_languages: locale,
-      });
+      } as any);
 
-      // Extract translations from keys
       response.items.forEach((key: any) => {
         const translation = key.translations?.find(
           (t: any) => t.language_iso === locale
@@ -60,10 +50,6 @@ export async function loadTranslations(locale: Locale): Promise<Translations> {
   }
 }
 
-/**
- * Get a translated string by key
- * Supports simple variable interpolation: "Hello {name}" with { name: "World" }
- */
 export function translate(
   translations: Translations,
   key: string,
@@ -80,9 +66,6 @@ export function translate(
   return text;
 }
 
-/**
- * Helper to create a translation function bound to a specific locale's translations
- */
 export function createTranslator(translations: Translations) {
   return (key: string, variables?: Record<string, string>) =>
     translate(translations, key, variables);
