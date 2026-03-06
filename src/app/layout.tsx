@@ -15,8 +15,12 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "GolfNext Internal Tool",
-  description: "A GolfNext internal tool built on the standard stack.",
+  title: "GolfNext Hotline | Remote Help",
+  description:
+    "Get help with GolfNext machines - support for kiosks, driving range terminals, and simulators. Available 07:00-22:00 CET.",
+  icons: {
+    icon: "/Logo/Favicon/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +30,9 @@ export default function RootLayout({
 }>): React.ReactElement {
   return (
     <html lang="en" className={`${sora.variable} ${manrope.variable}`}>
-      <body className="min-h-screen font-body antialiased">{children}</body>
+      <body className="min-h-screen font-body antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,0 +1,8 @@
+{
+  "name": "mvp-dev-stack",
+  "version": "1.0.0",
+  "description": "Full-stack MVP development plugin for React + Tailwind CSS + Node.js. Provides best practices, project scaffolding, and coding patterns for rapid MVP development.",
+  "author": {
+    "name": "GolfNext"
+  }
+}

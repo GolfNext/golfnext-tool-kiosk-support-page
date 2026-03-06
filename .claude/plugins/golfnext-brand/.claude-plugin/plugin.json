@@ -1,0 +1,8 @@
+{
+  "name": "golfnext-brand",
+  "version": "1.0.0",
+  "description": "GolfNext brand guidelines, design system, tone of voice, and core narrative. Ensures all content created by Claude follows GolfNext brand identity — from emails and LinkedIn posts to presentations and product copy.",
+  "author": {
+    "name": "GolfNext"
+  }
+}

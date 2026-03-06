@@ -1,0 +1,23 @@
+{
+  "skill_name": "supabase",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Jeg er ved at bygge et internt tool til at tracke leads fra golfklubber. Jeg har brug for en database tabel til leads med felter som klubnavn, kontaktperson, email, status og dato. Kan du sætte Supabase op for mig og vise hvordan jeg querier data i en Next.js Server Component?",
+      "expected_output": "Korrekt client setup med server client, type-safe query, RLS policy, og SQL til at oprette tabellen. Bruger createClient fra src/lib/supabase/server.ts.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Jeg har en tools-tabel i Supabase og vil lave en API route der kan oprette nye tools og returnere dem. Husk at kun folk der er logget ind via portalen må kunne gøre det.",
+      "expected_output": "Next.js API route med POST handler, auth check via JWT, insert query med .select().single(), korrekt fejlhåndtering med { error, code } format, og RLS policy for insert.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Jeg har ændret min database schema og tilføjet en ny kolonne 'priority' til min tasks tabel. Hvad skal jeg gøre nu for at min TypeScript kode kender til den nye kolonne?",
+      "expected_output": "Instruktion om at regenerere types med npx supabase gen types typescript, opdatere database.ts, og eventuelt oprette en migration fil.",
+      "files": []
+    }
+  ]
+}

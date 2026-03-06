@@ -1,0 +1,8 @@
+{
+  "name": "hubspot-cms-dev",
+  "version": "1.0.0",
+  "description": "Full-stack HubSpot CMS development plugin. Provides best practices, scaffolding, and coding patterns for HubSpot themes, custom modules, HubL templates, CLI workflows, and HubDB. Use this plugin whenever working with HubSpot CMS, HubL, hs CLI, or building HubSpot themes and modules.",
+  "author": {
+    "name": "GolfNext"
+  }
+}

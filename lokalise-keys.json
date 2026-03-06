@@ -1,0 +1,69 @@
+{
+  "hotline.page_title": "GolfNext Hotline",
+  "hotline.tagline": "Get help with GolfNext machines",
+
+  "lang.da": "Danish",
+  "lang.sv": "Swedish",
+  "lang.is": "Icelandic",
+  "lang.fi": "Finnish",
+  "lang.en": "English",
+  "lang.no": "Norwegian",
+  "lang.de": "German",
+
+  "hotline.status.open": "Open",
+  "hotline.status.closed": "Closed",
+  "hotline.status.opens_at": "Opens at {time}",
+
+  "hotline.phone.label": "Call hotline",
+  "hotline.phone.call_button": "Call now: +45 70 70 79 99",
+
+  "hotline.email.label": "Or email us at",
+
+  "hotline.incidents.title": "Active incidents",
+  "hotline.incidents.none": "No known issues right now",
+  "hotline.incidents.status.open": "Active issue",
+  "hotline.incidents.status.monitoring": "We're working on it",
+  "hotline.incidents.created_at": "Created: {time}",
+
+  "selfhelp.title": "Try this first",
+  "selfhelp.items.count": "5",
+
+  "selfhelp.item.1.title": "Printer not working",
+  "selfhelp.item.1.step.count": "3",
+  "selfhelp.item.1.step.1": "Check if there is paper in the printer",
+  "selfhelp.item.1.step.2": "Press the green button to restart",
+  "selfhelp.item.1.step.3": "If the problem continues, call the hotline",
+
+  "selfhelp.item.2.title": "Card not working",
+  "selfhelp.item.2.step.count": "3",
+  "selfhelp.item.2.step.1": "Make sure the card is activated on your account",
+  "selfhelp.item.2.step.2": "Try holding the card completely still at the scanner",
+  "selfhelp.item.2.step.3": "Contact the club if the card still doesn't work",
+
+  "selfhelp.item.3.title": "Machine not responding / frozen screen",
+  "selfhelp.item.3.step.count": "2",
+  "selfhelp.item.3.step.1": "Wait 30 seconds - the machine restarts automatically",
+  "selfhelp.item.3.step.2": "If the screen is still black after 1 minute, call the hotline",
+
+  "selfhelp.item.4.title": "I didn't get my receipt",
+  "selfhelp.item.4.step.count": "2",
+  "selfhelp.item.4.step.1": "Check if the printer has paper",
+  "selfhelp.item.4.step.2": "You can always view your purchases in the GolfNext app",
+
+  "selfhelp.item.5.title": "Machine is turned off",
+  "selfhelp.item.5.step.count": "2",
+  "selfhelp.item.5.step.1": "Call the hotline immediately",
+  "selfhelp.item.5.step.2": "We'll fix it as quickly as possible",
+
+  "club.section.title": "What GolfNext cannot help with – contact the club",
+  "club.section.description": "For the following questions, please contact your golf club directly:",
+  "club.items.count": "5",
+  "club.item.1": "Opening hours and green fee prices",
+  "club.item.2": "Membership and fees",
+  "club.item.3": "Booking tee times",
+  "club.item.4": "Key/access to the facility",
+  "club.item.5": "General questions about the club",
+  "club.find_club": "Find your club at golfnext.com/clubs",
+
+  "about.link_label": "About GolfNext"
+}

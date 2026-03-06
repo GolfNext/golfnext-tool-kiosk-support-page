@@ -1,0 +1,23 @@
+{
+  "skill_name": "definition-of-done",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Jeg har lige færdiggjort en ny feature til vores lead tracker. Kan du tjekke om alt er klar til at merge?",
+      "expected_output": "Kører npm run build, npm run test, npm run lint automatisk. Rapporterer resultater. Stiller spørgsmål om manuelle checklist items (business logic tests, env vars, README, deployment, code review).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Er min kode klar? Jeg har pushet til GitHub og Vercel har deployet. Tests kører lokalt.",
+      "expected_output": "Kører de automatiske checks selv i stedet for at stole på brugerens udsagn. Genererer en komplet DoD rapport med alle items.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Jeg har bygget et helt nyt internt tool til HR. Det er mit første tool. Hvad skal jeg huske inden jeg siger det er done?",
+      "expected_output": "Kører automatiske checks. Inkluderer portal-registrering som et vigtigt punkt (nyt tool). Nævner feature-dev plugin quality review for vibe coders.",
+      "files": []
+    }
+  ]
+}
