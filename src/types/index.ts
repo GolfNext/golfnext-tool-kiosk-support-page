@@ -1,14 +1,30 @@
-import type { Locale } from "@/lib/lokalise";
+import type { Locale } from "@/lib/locale-types";
 
 /**
- * ClickUp incident from API
+ * Golf club from ClickUp "GolfNext Clubs" list
+ */
+export interface GolfClub {
+  id: string;
+  name: string;
+  hubspotId: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+  countryCode: string;
+  city: string;
+}
+
+/**
+ * ClickUp incident from API with venue relationships
  */
 export interface Incident {
   id: string;
   title: string;
   description: string;
   status?: "OPEN" | "MONITORING";
-  venues?: string[];
+  venues?: string[]; // Club names for display
+  venueIds?: string[]; // Club task IDs from relationship field
+  clubs?: GolfClub[]; // Full club data after lookup
   updatedAt?: string;
 }
 
@@ -27,6 +43,14 @@ export interface LanguageOption {
   code: Locale;
   name: string;
   flag: string;
+}
+
+/**
+ * Coordinates
+ */
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
 }
 
 /**
