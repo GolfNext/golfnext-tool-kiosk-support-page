@@ -1,6 +1,11 @@
 import type { Locale } from "@/lib/locale-types";
 
 /**
+ * Incident scope types
+ */
+export type IncidentScope = "Global" | "Country" | "Clubs";
+
+/**
  * Golf club from ClickUp "GolfNext Clubs" list
  */
 export interface GolfClub {
@@ -15,13 +20,15 @@ export interface GolfClub {
 }
 
 /**
- * ClickUp incident from API with venue relationships
+ * ClickUp incident with scope and geo-filtering
  */
 export interface Incident {
   id: string;
   title: string;
   description: string;
   status?: "OPEN" | "MONITORING";
+  scope?: IncidentScope;
+  targetCountry?: string;
   venues?: string[]; // Club names for display
   venueIds?: string[]; // Club task IDs from relationship field
   clubs?: GolfClub[]; // Full club data after lookup
@@ -54,7 +61,7 @@ export interface Coordinates {
 }
 
 /**
- * Page props with translations
+ * Page props
  */
 export interface PageProps {
   params: Promise<Record<string, string>>;

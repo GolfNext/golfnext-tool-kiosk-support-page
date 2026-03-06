@@ -24,6 +24,7 @@
   "hotline.incidents.status.open": "Active issue",
   "hotline.incidents.status.monitoring": "We're working on it",
   "hotline.incidents.created_at": "Created: {time}",
+  "hotline.incidents.scope.global": "All kiosks",
 
   "selfhelp.title": "Try this first",
   "selfhelp.items.count": "5",
