@@ -120,7 +120,7 @@ export async function GET(request: Request) {
       // Get scope
       const scopeField = task.custom_fields?.find((f: any) => f.name === "Incident_Scope");
       const scopeRaw = scopeField?.value;
-      const scope: IncidentScope = scopeRaw ? (SCOPE_MAP[String(scopeRaw)] || "Clubs") : "Clubs";
+      const scope: IncidentScope = (scopeRaw !== undefined && scopeRaw !== null) ? (SCOPE_MAP[String(scopeRaw)] || "Clubs") : "Clubs";
 
       console.log(`Task "${task.name}": Scope raw=${scopeRaw}, mapped=${scope}`);
 
