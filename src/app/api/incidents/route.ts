@@ -129,7 +129,7 @@ export async function GET(request: Request) {
         // Lookup full club data with coordinates
         clubs = venueTaskIds
           .map((id: string) => clubsMap.get(id))
-          .filter((club): club is GolfClub => club !== undefined);
+          .filter((club: GolfClub | undefined): club is GolfClub => club !== undefined);
       }
 
       return {
