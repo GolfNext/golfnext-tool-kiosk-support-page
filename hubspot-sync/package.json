@@ -1,0 +1,12 @@
+{
+  "name": "hubspot-clickup-sync",
+  "version": "1.0.0",
+  "description": "Sync HubSpot customers to ClickUp GolfNext Kiosk Customers list",
+  "scripts": {
+    "get-field-ids": "node get-clickup-field-ids.js",
+    "bulk-sync": "node bulk-sync-customers.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
