@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Incident, GolfClub, IncidentScope } from "@/types";
-import { filterClubsByProximity } from "@/lib/geo";
+import { filterClubsByProximity, calculateDistance } from "@/lib/geo";
 import { headers } from "next/headers";
 
 const PROXIMITY_RADIUS_KM = 10;
@@ -17,10 +17,11 @@ const SCOPE_MAP: Record<string, IncidentScope> = {
 export async function GET(request: Request) {
   try {
     const apiKey = process.env.CLICKUP_API_KEY;
-    const incidentsListId = process.env.CLICKUP_INCIDENTS_LIST_ID;
+    const incidentsListId = process.env.CLICKUP_INCIDENTS_LIST_ID || process.env.CLICKUP_LIST_ID;
     const clubsListId = process.env.CLICKUP_CLUBS_LIST_ID;
 
     if (!apiKey || !incidentsListId) {
+      console.error("Missing API key or incidents list ID");
       return NextResponse.json({ incidents: [] });
     }
 
@@ -28,26 +29,33 @@ export async function GET(request: Request) {
     const userLat = headersList.get("x-vercel-ip-latitude");
     const userLon = headersList.get("x-vercel-ip-longitude");
     const userCountry = headersList.get("x-vercel-ip-country");
+    const userCity = headersList.get("x-vercel-ip-city");
+
+    console.log("=== USER LOCATION ===");
+    console.log("Latitude:", userLat, "Longitude:", userLon);
+    console.log("Country:", userCountry, "City:", userCity);
 
     const { searchParams } = new URL(request.url);
     const locale = (searchParams.get("locale") || "en").toLowerCase();
 
-    // Fetch incidents
+    // Fetch incidents (reduced cache)
     const incidentsResponse = await fetch(
       `https://api.clickup.com/api/v2/list/${incidentsListId}/task?statuses[]=OPEN&statuses[]=MONITORING`,
       {
         headers: { Authorization: apiKey },
-        next: { revalidate: 60 },
+        next: { revalidate: 10 }, // Cache only 10 seconds
       }
     );
 
     if (!incidentsResponse.ok) {
+      console.error("ClickUp incidents API error");
       return NextResponse.json({ incidents: [] });
     }
 
     const incidentsData = await incidentsResponse.json();
+    console.log(`Fetched ${incidentsData.tasks?.length || 0} incidents from ClickUp`);
     
-    // Fetch clubs if configured
+    // Fetch clubs
     const clubsMap = new Map<string, GolfClub>();
     
     if (clubsListId && clubsListId !== "your-clubs-list-id-here") {
@@ -55,7 +63,7 @@ export async function GET(request: Request) {
         `https://api.clickup.com/api/v2/list/${clubsListId}/task`,
         {
           headers: { Authorization: apiKey },
-          next: { revalidate: 3600 },
+          next: { revalidate: 600 }, // Cache clubs for 10 minutes
         }
       );
 
@@ -67,7 +75,7 @@ export async function GET(request: Request) {
           const lon = clubTask.custom_fields?.find((f: any) => f.name === "Longitude")?.value;
           
           if (lat && lon) {
-            clubsMap.set(clubTask.id, {
+            const club: GolfClub = {
               id: clubTask.id,
               name: clubTask.name,
               hubspotId: clubTask.custom_fields?.find((f: any) => f.name === "HubSpot_ID")?.value || "",
@@ -76,9 +84,23 @@ export async function GET(request: Request) {
               country: clubTask.custom_fields?.find((f: any) => f.name === "Country")?.value || "",
               countryCode: clubTask.custom_fields?.find((f: any) => f.name === "Country_Code")?.value || "",
               city: clubTask.custom_fields?.find((f: any) => f.name === "City")?.value || "",
-            });
+            };
+            clubsMap.set(clubTask.id, club);
+            
+            // Log distance to user if geo available
+            if (userLat && userLon) {
+              const distance = calculateDistance(
+                parseFloat(userLat),
+                parseFloat(userLon),
+                club.latitude,
+                club.longitude
+              );
+              console.log(`Club: ${club.name} (${club.city}) - Distance: ${distance.toFixed(2)}km`);
+            }
           }
         });
+        
+        console.log(`Loaded ${clubsMap.size} clubs with coordinates`);
       }
     }
 
@@ -90,14 +112,17 @@ export async function GET(request: Request) {
       const allClubs = Array.from(clubsMap.values());
       const nearbyClubs = filterClubsByProximity(allClubs, lat, lon, PROXIMITY_RADIUS_KM);
       nearbyClubIds = new Set(nearbyClubs.map((c) => c.clubId));
+      console.log(`User within ${PROXIMITY_RADIUS_KM}km of: ${nearbyClubs.map(c => c.name).join(", ")}`);
     }
 
     // Process incidents
     const incidents: Incident[] = (incidentsData.tasks || []).map((task: any) => {
       // Get scope
       const scopeField = task.custom_fields?.find((f: any) => f.name === "Incident_Scope");
-      const scopeRaw = scopeField?.value || "2";
-      const scope: IncidentScope = SCOPE_MAP[String(scopeRaw)] || "Clubs";
+      const scopeRaw = scopeField?.value;
+      const scope: IncidentScope = scopeRaw ? (SCOPE_MAP[String(scopeRaw)] || "Clubs") : "Clubs";
+
+      console.log(`Task "${task.name}": Scope raw=${scopeRaw}, mapped=${scope}`);
 
       // Get target country
       const targetCountryField = task.custom_fields?.find((f: any) => f.name === "Target_Country");
@@ -122,14 +147,20 @@ export async function GET(request: Request) {
       let clubs: GolfClub[] = [];
 
       if (venueField && venueField.type === "list_relationship" && Array.isArray(venueField.value)) {
-        // Extract club IDs and names from relationship field value
-        const venueTaskIds = venueField.value.map((item: any) => item.id).filter(Boolean);
-        venues = venueField.value.map((item: any) => item.name).filter(Boolean);
+        // Extract ALL venues from relationship
+        venues = venueField.value
+          .map((item: any) => item.name)
+          .filter((name: string | null | undefined): name is string => Boolean(name));
         
-        // Lookup full club data with coordinates
+        const venueTaskIds = venueField.value
+          .map((item: any) => item.id)
+          .filter(Boolean);
+        
         clubs = venueTaskIds
           .map((id: string) => clubsMap.get(id))
           .filter((club: GolfClub | undefined): club is GolfClub => club !== undefined);
+          
+        console.log(`  Venues: ${venues.join(", ")} (${venues.length} total)`);
       }
 
       return {
@@ -147,10 +178,12 @@ export async function GET(request: Request) {
       };
     });
 
-    console.log(`Returning ${incidents.length} incidents`);
+    console.log(`\nReturning ${incidents.length} incidents`);
+    console.log("Incidents:", incidents.map(i => ({ title: i.title, scope: i.scope, venues: i.venues })));
+    
     return NextResponse.json({ incidents });
   } catch (error) {
     console.error("API Error:", error);
-    return NextResponse.json({ incidents: [] });
+    return NextResponse.json({ incidents: [], error: String(error) });
   }
 }
