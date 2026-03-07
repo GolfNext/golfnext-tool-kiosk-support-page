@@ -214,9 +214,55 @@ export async function GET(request: Request) {
       };
     });
 
-    console.log(`Returning ${incidents.length} incidents`);
+  } catch (error) {
+    console.error("API Error:", error);
+    return NextResponse.json({ incidents: [] });
+  }
+}
+
+    // Apply scope-based filtering
+    let filteredIncidents = incidents.filter((incident) => {
+      // Global: always show to everyone
+      if (incident.scope === "Global") {
+        console.log(`  ${incident.title}: Global scope - showing to all users`);
+        return true;
+      }
+
+      // Country: show only if user in same country
+      if (incident.scope === "Country") {
+        const countryCodeMap: Record<string, string> = {
+          "Denmark": "DK",
+          "Iceland": "IS",
+          "Sweden": "SE",
+          "Finland": "FI",
+          "Norway": "NO",
+        };
+        const targetCode = countryCodeMap[incident.targetCountry || ""];
+        const matches = userCountry === targetCode;
+        console.log(`  ${incident.title}: Country=${incident.targetCountry} (${targetCode}), User=${userCountry}, Match=${matches}`);
+        return matches;
+      }
+
+      // Clubs: show if user near any affected club
+      if (incident.scope === "Clubs") {
+        // If no clubs data or no geo, show all (fallback)
+        if (clubsMap.size === 0 || !userLat || !userLon) {
+          console.log(`  ${incident.title}: Clubs scope, no geo-filtering (fallback: show all)`);
+          return true;
+        }
+        
+        // Check if any affected club is nearby
+        const hasNearbyClub = incident.clubs?.some((club) => nearbyClubIds.has(club.id)) || false;
+        console.log(`  ${incident.title}: Clubs=${incident.venues?.join(", ")}, Nearby=${hasNearbyClub}`);
+        return hasNearbyClub;
+      }
+
+      return true;
+    });
+
+    console.log(`Filtered: ${incidents.length} → ${filteredIncidents.length} incidents`);
     
-    return NextResponse.json({ incidents });
+    return NextResponse.json({ incidents: filteredIncidents });
   } catch (error) {
     console.error("API Error:", error);
     return NextResponse.json({ incidents: [] });
