@@ -148,16 +148,31 @@ export async function GET(request: Request) {
         ? (SCOPE_MAP[String(scopeRaw)] || "Clubs")
         : "Clubs";
 
-      // Get target country
+      // Get target country with manual mapping as fallback
       const targetCountryField = task.custom_fields?.find((f: any) => f.name === "Target_Country");
+      console.log("Target_Country field:", targetCountryField ? { value: targetCountryField.value, type_config: targetCountryField.type_config } : "not found");
       let targetCountry = targetCountryField?.value;
       
-      if (targetCountryField?.type_config?.options && targetCountry) {
+      // Manual mapping for country dropdown (IDs to labels)
+      const COUNTRY_ID_MAP: Record<string, string> = {
+        "0": "Denmark",
+        "1": "Iceland",
+        "2": "Sweden",
+        "3": "Finland",
+        "4": "Norway",
+      };
+      
+      // Try to map via type_config first, then fallback to manual map
+      if (targetCountryField?.type_config?.options && targetCountry !== null && targetCountry !== undefined) {
         const option = targetCountryField.type_config.options.find(
-          (opt: any) => opt.id === targetCountry
+          (opt: any) => String(opt.id) === String(targetCountry) || opt.orderindex === targetCountry
         );
-        targetCountry = option?.label || option?.name || targetCountry;
+        targetCountry = option?.label || option?.name || COUNTRY_ID_MAP[String(targetCountry)] || targetCountry;
+      } else if (targetCountry !== null && targetCountry !== undefined) {
+        targetCountry = COUNTRY_ID_MAP[String(targetCountry)] || String(targetCountry);
       }
+      
+      console.log("Target country mapped to:", targetCountry);
 
       // Get locale-specific title
       const titleFieldName = `Title_${locale.toUpperCase()}`;
