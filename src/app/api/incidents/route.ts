@@ -59,6 +59,7 @@ export async function GET(request: Request) {
     const clubsMap = new Map<string, GolfClub>();
     
     if (clubsListId && clubsListId !== "your-clubs-list-id-here") {
+      console.log("Fetching clubs from list ID:", clubsListId);
       const clubsResponse = await fetch(
         `https://api.clickup.com/api/v2/list/${clubsListId}/task`,
         {
@@ -101,6 +102,8 @@ export async function GET(request: Request) {
         });
         
         console.log(`Loaded ${clubsMap.size} clubs with coordinates`);
+      } else {
+        console.error("Failed to fetch clubs, status:", clubsResponse.status, clubsResponse.statusText);
       }
     }
 
