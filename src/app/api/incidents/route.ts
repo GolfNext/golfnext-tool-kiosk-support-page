@@ -5,7 +5,6 @@ import { headers } from "next/headers";
 
 const PROXIMITY_RADIUS_KM = 10;
 
-// Scope ID to label mapping
 const SCOPE_MAP: Record<string, IncidentScope> = {
   "0": "Global",
   "1": "Country",
@@ -33,13 +32,14 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const locale = (searchParams.get("locale") || "en").toLowerCase();
 
-    // Fetch incidents with relationships included
-    const incidentsUrl = `https://api.clickup.com/api/v2/list/${incidentsListId}/task?statuses[]=OPEN&statuses[]=MONITORING&include_closed=false`;
-    
-    const incidentsResponse = await fetch(incidentsUrl, {
-      headers: { Authorization: apiKey },
-      next: { revalidate: 60 },
-    });
+    // Fetch incidents
+    const incidentsResponse = await fetch(
+      `https://api.clickup.com/api/v2/list/${incidentsListId}/task?statuses[]=OPEN&statuses[]=MONITORING`,
+      {
+        headers: { Authorization: apiKey },
+        next: { revalidate: 60 },
+      }
+    );
 
     if (!incidentsResponse.ok) {
       return NextResponse.json({ incidents: [] });
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 
     const incidentsData = await incidentsResponse.json();
     
-    // Fetch all clubs if list ID configured
+    // Fetch clubs if configured
     const clubsMap = new Map<string, GolfClub>();
     
     if (clubsListId && clubsListId !== "your-clubs-list-id-here") {
@@ -93,17 +93,16 @@ export async function GET(request: Request) {
     }
 
     // Process incidents
-    let incidents: Incident[] = (incidentsData.tasks || []).map((task: any) => {
-      // Get scope - map ID to label
+    const incidents: Incident[] = (incidentsData.tasks || []).map((task: any) => {
+      // Get scope
       const scopeField = task.custom_fields?.find((f: any) => f.name === "Incident_Scope");
-      const scopeRaw = scopeField?.value || "2"; // Default to Clubs
+      const scopeRaw = scopeField?.value || "2";
       const scope: IncidentScope = SCOPE_MAP[String(scopeRaw)] || "Clubs";
 
       // Get target country
       const targetCountryField = task.custom_fields?.find((f: any) => f.name === "Target_Country");
       let targetCountry = targetCountryField?.value;
       
-      // Map country ID to label if needed
       if (targetCountryField?.type_config?.options && targetCountry) {
         const option = targetCountryField.type_config.options.find(
           (opt: any) => opt.id === targetCountry || opt.orderindex === targetCountry
@@ -116,36 +115,21 @@ export async function GET(request: Request) {
       const titleField = task.custom_fields?.find((f: any) => f.name === titleFieldName);
       const localizedTitle = titleField?.value || task.name;
 
-      // Get venues - try both relationship and custom field
+      // Get venues from "Venue/s" relationship field
+      const venueField = task.custom_fields?.find((f: any) => f.name === "Venue/s");
+      
       let venues: string[] = [];
       let clubs: GolfClub[] = [];
 
-      // Try relationship field first (preferred)
-      const venueRelationships = task.relationships?.venue || [];
-      if (venueRelationships.length > 0) {
-        const venueIds = venueRelationships.map((rel: any) => rel.id || rel);
-        clubs = venueIds
+      if (venueField && venueField.type === "list_relationship" && Array.isArray(venueField.value)) {
+        // Extract club IDs and names from relationship field value
+        const venueTaskIds = venueField.value.map((item: any) => item.id).filter(Boolean);
+        venues = venueField.value.map((item: any) => item.name).filter(Boolean);
+        
+        // Lookup full club data with coordinates
+        clubs = venueTaskIds
           .map((id: string) => clubsMap.get(id))
           .filter((club): club is GolfClub => club !== undefined);
-        venues = clubs.map((c) => c.name);
-      } 
-      // Fallback to custom field venue
-      else {
-        const venueField = task.custom_fields?.find((f: any) => f.name === "Venue");
-        if (venueField?.type_config?.options) {
-          const selectedValues = Array.isArray(venueField.value) 
-            ? venueField.value 
-            : venueField.value ? [venueField.value] : [];
-
-          venues = selectedValues
-            .map((valueId: any) => {
-              const option = venueField.type_config.options.find(
-                (opt: any) => opt.id === valueId || opt.orderindex === valueId
-              );
-              return option?.label || option?.name || null;
-            })
-            .filter(Boolean);
-        }
       }
 
       return {
@@ -163,29 +147,6 @@ export async function GET(request: Request) {
       };
     });
 
-    // Apply scope filtering
-    if (clubsMap.size > 0) {
-      incidents = incidents.filter((incident) => {
-        if (incident.scope === "Global") return true;
-        
-        if (incident.scope === "Country" && userCountry) {
-          const countryCodeMap: Record<string, string> = {
-            "Denmark": "DK", "Iceland": "IS", "Sweden": "SE",
-            "Finland": "FI", "Norway": "NO",
-          };
-          return userCountry === countryCodeMap[incident.targetCountry || ""];
-        }
-
-        if (incident.scope === "Clubs") {
-          if (!userLat || !userLon || nearbyClubIds.size === 0) return true;
-          return incident.clubs?.some((club) => nearbyClubIds.has(club.id)) || venues.length > 0;
-        }
-
-        return true;
-      });
-    }
-
-    console.log("INCIDENTS DATA:", JSON.stringify(incidents.map(i => ({ id: i.id, scope: i.scope, venues: i.venues })), null, 2));
     console.log(`Returning ${incidents.length} incidents`);
     return NextResponse.json({ incidents });
   } catch (error) {
